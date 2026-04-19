@@ -190,8 +190,9 @@ def plot_4_prediction(results):
         width = bar.get_width()
         plt.text(width + 1, bar.get_y() + bar.get_height()/2, f"{width:.1f}%", ha='left', va='center', weight="bold")
         
-    plt.text(35, 1.8, f"Accuracy = {acc:.1f}%", 
+    plt.text(45, 1.0, f"Accuracy = {acc:.1f}%", 
              fontsize=16, weight="bold", color="#1D3557",
+             ha='center', va='center',
              bbox=dict(facecolor='#F1FAEE', edgecolor='#A8DADC', boxstyle='round,pad=0.5'))
              
     plt.figtext(0.5, -0.05, "Early signals are absent in ~44% of events; however, when present, they are highly predictive (77% accuracy).", 
