@@ -1,11 +1,8 @@
 # Pc Maturation Patterns in LEO Conjunction Events
 
-This project explores how collision risk (**Pc**) actually evolves across multiple CDM updates.
+This started as part of building Conjunx, where I kept seeing Pc behave unpredictably across updates. 
 
-Instead of treating each CDM as a one-off alert, the goal is to understand:
-- how conjunction events *develop over time*
-- when the risk estimate becomes reliable
-- and whether early updates are actionable or just noise
+This looks at how collision risk (**Pc**) actually changes across multiple CDM updates. I built this to understand whether early CDMs are actually useful for decision-making.
 
 ---
 
