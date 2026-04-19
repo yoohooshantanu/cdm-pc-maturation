@@ -38,7 +38,7 @@ From a dataset of high-risk LEO conjunction sequences:
 
 - When a clear trend appears early, it predicts the final direction with **~77% accuracy**  
   *(calculated only on events where a non-flat signal exists)*  
-  ![Prediction Power](output/charts/chart4_prediction.png)
+  ![Prediction Power](output/charts/chart4_prediction.png?v=2)
 
 - Events involving active satellites behave differently:
   - more oscillations  
