@@ -27,24 +27,35 @@ This project answers a simple but important question:
 
 From a dataset of high-risk LEO conjunction sequences:
 
-- **~56% of events** end with a higher Pc than the initial warning  
+- **56% of events (N=182/324)** end with a higher Pc than the initial warning  
   ![Direction Distribution](output/charts/chart2_direction.png)
 
-- Pc typically stabilizes after **~4 updates**, but ~16% never stabilize before TCA  
+- Pc typically stabilizes after **~4 updates**, but **16% (N=51/324)** never stabilize before TCA  
   ![Stabilization](output/charts/chart3_stabilization.png)
 
-- When a clear trend appears early, it predicts the final direction with **~77% accuracy**  
+- When a clear trend appears early, it predicts the final direction with **77% accuracy (N=140/182)**  
   *(calculated only on events where a non-flat signal exists)*  
   ![Prediction Power](output/charts/chart4_prediction.png?v=2)
 
-- Events involving active satellites behave differently:
+- Events involving active satellites behave differently **(N=324)**:
   - more oscillations  
   - slower convergence  
   - higher volatility  
   ![Archetypes](output/charts/chart5_archetypes.png)
 
 **Important:**
-> Early signals are useful — but they are absent in ~44% of events.
+> Early signals are useful — but they are absent in **44% of events (N=142/324)**.
+
+---
+
+## What Surprised Me: The Payload Volatility Problem
+
+Going into this, I assumed active satellites (payloads) would have smoother, more predictable $P_c$ curves. After all, their ephemeris is constantly tracked and actively managed. 
+
+The data showed the exact opposite: **payload-involved events are significantly more volatile and prone to oscillations than dead debris.**
+
+**My Hypothesis:**  
+Dead debris simply follows ballistic orbital mechanics, meaning its covariance propagation is mathematically stable. Active satellites, however, undergo routine station-keeping, drag make-up, and attitude adjustments. Even if a maneuver isn't explicitly for collision avoidance, these tiny orbital tweaks continuously perturb the state vector. Every minor operator-induced correction—or even just high-frequency tracking updates merged into the catalog—causes a shock to the covariance overlap, resulting in unpredictable swings in $P_c$.
 
 ---
 
