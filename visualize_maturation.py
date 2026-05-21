@@ -102,7 +102,7 @@ def plot_1_trajectories(sequences):
                  color=color, alpha=alpha, linewidth=lw, label=label, zorder=zorder)
         
     plt.suptitle("Sample Pc Trajectories", weight="bold", fontsize=18, y=1.02)
-    plt.title("log10(Pc) evolution across CDM updates", pad=15, fontsize=14)
+    plt.title("log10(Pc) evolution across CDM updates (N=648 sequences)", pad=15, fontsize=14)
     plt.xlabel("CDM Update Number")
     plt.ylabel("log10(Probability of Collision)")
     plt.xlim(0.5, 20.5) 
@@ -126,7 +126,7 @@ def plot_2_direction(results):
     
     bars = plt.bar(labels, values, color=colors, width=0.6)
     
-    plt.title("Final Collision Risk Increases in Majority of Events", pad=20, weight="bold")
+    plt.title("Final Collision Risk Increases in Majority of Events\n(N=648 sequences)", pad=20, weight="bold")
     plt.ylabel("Percentage of Events (%)")
     plt.ylim(0, 70)
     
@@ -146,7 +146,7 @@ def plot_3_stabilization(results):
     
     sns.histplot(updates, discrete=True, color="#457B9D", alpha=0.8)
     
-    plt.title("Updates Required for Pc to Stabilize (<10% change)", pad=20, weight="bold")
+    plt.title("Updates Required for Pc to Stabilize (<10% change) (N=648 sequences)", pad=20, weight="bold")
     plt.xlabel("Number of Updates")
     plt.ylabel("Frequency (Count of Events)")
     
@@ -185,7 +185,7 @@ def plot_4_prediction(results):
     bars = plt.barh(labels[::-1], values[::-1], color=colors[::-1], height=0.6)
     
     plt.suptitle("Early Prediction Power (Using First 3 CDMs)", weight="bold", fontsize=18, y=1.02)
-    plt.title(f"Early CDM trends are predictive — but only present in {has_signal:.0f}% of events", fontsize=14, pad=15)
+    plt.title(f"Early CDM trends are predictive — but only present in {has_signal:.0f}% of events\n(N=648 sequences)", fontsize=14, pad=15)
     
     plt.xlabel("Percentage of All Events (%)")
     plt.xlim(0, 60)
@@ -194,12 +194,12 @@ def plot_4_prediction(results):
         width = bar.get_width()
         plt.text(width + 1, bar.get_y() + bar.get_height()/2, f"{width:.1f}%", ha='left', va='center', weight="bold")
         
-    plt.text(45, 1.0, f"Accuracy = {acc:.1f}%", 
-             fontsize=16, weight="bold", color="#1D3557",
+    plt.text(45, 1.0, f"Accuracy = {acc:.1f}%\n(vs Naive Base Rate: 55.6%)", 
+             fontsize=14, weight="bold", color="#1D3557",
              ha='center', va='center',
              bbox=dict(facecolor='#F1FAEE', edgecolor='#A8DADC', boxstyle='round,pad=0.5'))
              
-    plt.figtext(0.5, -0.05, f"Early signals are absent in ~{flat_rate:.0f}% of events; however, when present, they are highly predictive ({acc:.0f}% accuracy).", 
+    plt.figtext(0.5, -0.05, f"Early signals are absent in ~{flat_rate:.0f}% of events; however, when present, they are predictive ({acc:.0f}% accuracy).", 
                 ha="center", fontsize=12, style='italic', color='#457B9D', weight='bold', wrap=True)
                 
     save_plot("chart4_prediction.png")
@@ -230,7 +230,7 @@ def plot_5_archetypes(results):
     plt.bar(x + width/2, osc_rates, width, label='Oscillatory Behavior', color='#E63946')
     
     plt.suptitle("Active Satellites Introduce Significant Instability", weight="bold", fontsize=16, y=1.02)
-    plt.title("Conjunction Volatility by Object Type", pad=15)
+    plt.title("Conjunction Volatility by Object Type (N=648 sequences)", pad=15)
     plt.ylabel("Percentage of Events (%)")
     plt.xticks(x, labels)
     plt.ylim(0, 80)
@@ -287,7 +287,7 @@ def plot_6_flowchart(results):
     ax.annotate('', xy=(0.5, 0.25), xytext=(0.5, 0.35), arrowprops=arrow_props, zorder=2)
     ax.annotate('', xy=(0.85, 0.25), xytext=(0.6, 0.4), arrowprops=arrow_props, zorder=2)
     
-    plt.title("Operator Decision Flow", pad=20, weight="bold", fontsize=18)
+    plt.title("Operator Decision Flow (N=648 sequences)", pad=20, weight="bold", fontsize=18)
     
     # Add bottom footer insight
     plt.text(0.5, -0.05, f"Early signals are absent in ~{flat_rate:.0f}% of events — requiring delayed decisions.",
@@ -323,8 +323,8 @@ def plot_7_dilution(results):
     
     r, p_corr = stats.pearsonr(valid_dr, valid_dpc)
     
-    plt.suptitle("The Dilution Region Effect", weight="bold", fontsize=16, y=1.02)
-    plt.title("How Miss Distance Changes Affect Collision Risk", pad=15)
+    plt.suptitle("Exploratory Observation of Dilution Correlation", weight="bold", fontsize=16, y=1.02)
+    plt.title("How Miss Distance Changes Affect Collision Risk (N=648 sequences)", pad=15)
     plt.xlabel("Change in Miss Distance (km)")
     plt.ylabel("Change in log10(Probability)")
     
@@ -361,8 +361,8 @@ def plot_8_spaceweather(results):
     
     bars = plt.bar([0, 1], means, color=colors, width=0.6)
     
-    plt.suptitle("Atmospheric Drag Drives Prediction Volatility", weight="bold", fontsize=16, y=1.02)
-    plt.title("Mean Conjunction Volatility by Space Weather Condition", pad=15)
+    plt.suptitle("Solar Activity Shows No Significant Effect on Conjunction Volatility", weight="bold", fontsize=14, y=1.02)
+    plt.title("Mean Conjunction Volatility by Space Weather Condition (N=648 sequences)", pad=15)
     plt.ylabel("Mean Volatility (Delta log10 Pc)")
     plt.xticks([0, 1], labels)
     
