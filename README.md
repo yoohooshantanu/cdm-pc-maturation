@@ -10,16 +10,21 @@ Space Traffic Management (STM) relies on the Probability of Collision ($P_c$) me
 
 Operators frequently face the "early action" dilemma: executing an avoidance maneuver early saves propellant, but the $P_c$ generated at $T-72$ hours often diverges significantly from the final $P_c$ at $T-12$ hours. This study quantifies that divergence. By modeling the step-wise evolution of CDMs, we establish empirical bounds on when $P_c$ mathematically stabilizes and identify the physical mechanisms that disrupt that stabilization.
 
+### 1.1 Related Work and Novelty
+Existing collision avoidance literature predominantly focuses on calculating $P_c$ accurately from a single state vector or optimizing the $\Delta V$ of an avoidance maneuver. The temporal maturation of the warning sequence itself—treating the sequential series of CDMs as a dynamic behavioral signal rather than a static state—is severely underexplored. This paper addresses this gap by analyzing the trajectory of the $P_c$ signal across its entire lifecycle.
+
 ## 2. Data and Methodology
 
 ### 2.1 Dataset Construction
-Conjunction Data Messages (CDMs) were acquired via the Space-Track public API. A continuous 180-day retrospective window was established to ensure sufficient statistical power. The raw dataset consisted of 7,119 CDMs.
+Conjunction Data Messages (CDMs) were acquired via the Space-Track public API. A continuous 180-day retrospective window (Q3-Q4 2023) was established to ensure sufficient statistical power while controlling for seasonal solar cycle variance. The raw dataset consisted of 7,119 CDMs.
+
+Data sourced exclusively from Space-Track carries inherent observation biases dictated by the United States Space Surveillance Network (SSN) radar geometry, geographic distribution, and update cadence.
 
 To construct temporal sequences, CDMs were clustered using a composite key comprising the unique object pair (`SAT_1_ID`, `SAT_2_ID`) and the Time of Closest Approach (TCA) bounded within a $\pm 15$ minute tolerance window.
 
 ### 2.2 Filtering and Constraints
 The grouped sequences were subjected to the following operational constraints:
-1. **LEO Regime Limit:** Mean motion $> 11.25$ rev/day.
+1. **LEO Regime Limit:** Mean motion $> 11.25$ rev/day (effectively restricting the dataset to objects below $1000$ km altitude, where atmospheric drag is the dominant perturbation).
 2. **Criticality Threshold:** Maximum sequence $P_c \ge 10^{-4}$.
 3. **Temporal Length:** Minimum of 3 CDMs per sequence to enable trajectory analysis.
 
@@ -51,11 +56,13 @@ While the median event achieves mathematical stability at approximately $T-24$ h
 ![Figure 2](./output/charts/chart3_stabilization.png)
 *Figure 2: Stabilization updates vs. pathological non-stabilizing events.*
 
-### 3.3 Predictive Accuracy of Early Signals
-To assess the viability of early maneuvering, we retrospectively tracked the directional trend (slope) of the first three CDMs as a simple observational heuristic (this is not a trained predictive classifier). For sequences that exhibited a measurable initial slope (excluding flat events), the early trajectory correctly predicted the final state vector outcome with **74.1% accuracy** (compared to a naive base rate of 55.6% if one always guessed "Increasing"). 
+### 3.3 Predictive Accuracy and Benchmark Comparison
+To assess the viability of early maneuvering, we retrospectively tracked the directional trend (slope) of the first three CDMs as a simple observational heuristic (this is not a trained predictive classifier). For sequences that exhibited a measurable initial slope (excluding flat events), the early trajectory correctly predicted the final state vector outcome with **74.1% accuracy**.
+
+**Benchmark Comparison:** A naive trend predictor—always assuming the $P_c$ will ultimately increase, regardless of the early signal—yields a baseline accuracy of 55.6% on this dataset. The 3-CDM slope heuristic provides an 18.5 percentage point lift over this naive baseline. While advanced machine learning methods (e.g., Logistic Regression, Hidden Markov Models) are necessary for deployment, this heuristic establishes the baseline viability of early-signal feature engineering.
 
 ![Figure 3](./output/charts/chart4_prediction.png)
-*Figure 3: Early prediction accuracy derived from the initial 3-CDM slope.*
+*Figure 3: Early prediction accuracy derived from the initial 3-CDM slope vs. Naive Baseline.*
 
 ---
 
@@ -73,6 +80,12 @@ We defined volatility as the mean absolute difference in $\log_{10}(P_c)$ betwee
 As visualized in **Figure 4**, active mega-constellations exhibited exactly double the consecutive volatility of standard payloads. A Mann-Whitney U test between the Constellation and Standard Payload distributions confirmed the difference is statistically significant ($p = 0.011$). 
 
 **Discussion:** Debris-on-Debris conjunctions follow unperturbed ballistic propagation models, resulting in low volatility (0.06). Standard payloads generally drift, matching near-debris volatility (0.08). Mega-constellations, however, execute high-frequency drag-makeup and station-keeping maneuvers. These sub-threshold thruster actuations continuously perturb the state vector, invalidating prior covariance propagation models and causing the observed 0.16 volatility spikes in successive CDMs.
+
+### 4.2 Physical Mechanisms of Volatility
+The statistical trajectories observed in this dataset are driven by distinct physical and mathematical mechanisms:
+- **Atmospheric Drag:** Below $600$ km, variable atmospheric density creates significant along-track positional uncertainty. 
+- **Covariance Inflation:** Orbit determination algorithms deliberately inflate covariance matrices when propagating a state vector far into the future. As TCA approaches, the required propagation time decreases, reducing artificial inflation and resolving the true physical miss distance.
+- **Unmodeled Active Maneuvers:** The SSN radar network propagates orbits assuming ballistic motion. Autonomous mega-constellations frequently execute sub-threshold maneuvers that violate this assumption. The mismatch between the physical maneuver and the ballistic propagation model causes the high volatility and "Oscillating" archetypes observed in Figure 4.
 
 ![Figure 4](./output/charts/chart5_archetypes.png)
 *Figure 4: $P_c$ volatility segmented by maneuvering capability, proving active satellites generate significant statistical noise.*
