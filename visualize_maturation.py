@@ -212,14 +212,16 @@ def plot_5_archetypes(results):
     labels = ["Mega-Constellation\nvs Debris", "Standard Payload\nvs Debris", "Debris\nvs Debris"]
     
     means = []
+    sems = []
     for a in archs:
         deltas = results["archetypes"].get(a, {}).get("stability_deltas", [])
         means.append(np.mean(deltas) if deltas else 0.0)
+        sems.append(stats.sem(deltas) if len(deltas) > 1 else 0.0)
     
     x = np.arange(len(labels))
     colors = ['#E63946', '#2A9D8F', '#A8DADC']
     
-    bars = plt.bar(x, means, width=0.6, color=colors)
+    bars = plt.bar(x, means, yerr=sems, capsize=5, width=0.6, color=colors)
     
     plt.suptitle("Active Satellites Introduce Significant Instability", weight="bold", fontsize=16, y=1.02)
     plt.title("Conjunction Volatility by Object Type (N=648 sequences)", pad=15)
@@ -354,13 +356,17 @@ def plot_8_spaceweather(results):
     mean_high = np.mean(high) if high else 0.0
     mean_low = np.mean(low) if low else 0.0
     
+    sem_high = stats.sem(high) if len(high) > 1 else 0.0
+    sem_low = stats.sem(low) if len(low) > 1 else 0.0
+    
     plt.figure(figsize=(8, 6))
     
     labels = ["Low Solar Activity\n(F10.7 < 120)", "High Solar Activity\n(F10.7 >= 120)"]
     means = [mean_low, mean_high]
+    sems = [sem_low, sem_high]
     colors = ['#A8DADC', '#E63946']
     
-    bars = plt.bar([0, 1], means, color=colors, width=0.6)
+    bars = plt.bar([0, 1], means, yerr=sems, capsize=5, color=colors, width=0.6)
     
     plt.suptitle("Solar Activity Shows No Significant Effect on Conjunction Volatility", weight="bold", fontsize=14, y=1.02)
     plt.title("Mean Conjunction Volatility by Space Weather Condition (N=648 sequences)", pad=15)

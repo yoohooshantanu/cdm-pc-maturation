@@ -43,7 +43,7 @@ Stabilization is defined as the sequence index at which all subsequent $P_c$ upd
 - **Median Updates to Stable:** 5 CDMs
 - **Median Time to Stable:** $T-25.5$ hours to TCA.
 
-While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty.
+While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty. Notably, the histogram exhibits a slightly bimodal distribution (peaking at ~3 and ~5 updates), suggesting the presence of two distinct operational populations or radar tracking cadences.
 
 ![Figure 2](./output/charts/chart3_stabilization.png)
 *Figure 2: Stabilization updates vs. pathological non-stabilizing events.*
