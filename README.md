@@ -25,6 +25,9 @@ The grouped sequences were subjected to the following operational constraints:
 
 This filtering yielded $N=648$ unique, high-risk conjunction sequences. 
 
+### 2.3 Evaluation Methodology
+This analysis is designed as a retrospective observational study. To explore the bounds of $P_c$ maturation, the entire 180-day dataset was treated as a monolithic exploratory set. Future studies seeking to operationalize the early-prediction heuristics into formal machine learning classifiers must employ a strict, chronological train/test split to validate model generalization across diverse orbital regimes.
+
 ---
 
 ## 3. Maturation Trajectories and Temporal Stabilization
@@ -43,7 +46,7 @@ Stabilization is defined as the sequence index at which all subsequent $P_c$ upd
 - **Median Updates to Stable:** 5 CDMs
 - **Median Time to Stable:** $T-25.5$ hours to TCA.
 
-While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty. Notably, the histogram exhibits a slightly bimodal distribution (peaking at ~3 and ~5 updates), suggesting the presence of two distinct operational populations or radar tracking cadences.
+While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty. Notably, the histogram exhibits a bimodal distribution (peaking at ~3 and ~5 updates), suggesting the presence of two distinct operational populations or radar tracking cadences that are worth investigating in future work.
 
 ![Figure 2](./output/charts/chart3_stabilization.png)
 *Figure 2: Stabilization updates vs. pathological non-stabilizing events.*
@@ -141,3 +144,9 @@ python analyze_maturation.py
 # Generate matplotlib figures
 python visualize_maturation.py
 ```
+
+---
+
+## 9. Future Work
+
+**Orbit Altitude Confounding:** The object-type volatility findings (Section 4) indicate that mega-constellations introduce significant prediction noise. However, there is likely a confounding relationship with altitude, as most mega-constellations reside in specific LEO regimes ($500$-$600$ km) where atmospheric drag uncertainties are more pronounced than in higher orbits. Follow-up studies will incorporate a rigorous altitude breakdown to isolate the effects of atmospheric drag from active autonomous station-keeping maneuvers.
