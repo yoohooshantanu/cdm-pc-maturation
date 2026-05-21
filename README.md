@@ -150,3 +150,12 @@ python visualize_maturation.py
 ## 9. Future Work
 
 **Orbit Altitude Confounding:** The object-type volatility findings (Section 4) indicate that mega-constellations introduce significant prediction noise. However, there is likely a confounding relationship with altitude, as most mega-constellations reside in specific LEO regimes ($500$-$600$ km) where atmospheric drag uncertainties are more pronounced than in higher orbits. Follow-up studies will incorporate a rigorous altitude breakdown to isolate the effects of atmospheric drag from active autonomous station-keeping maneuvers.
+
+---
+
+## 10. Limitations
+
+Reviewers and practitioners should note the following constraints of this study:
+- **Single Data Source:** The analysis relies exclusively on Space-Track public CDMs. It does not incorporate private operator ephemeris or specialized radar data (e.g., LeoLabs), which could provide higher-fidelity state vectors.
+- **Approximate Sequence Grouping:** Conjunction sequences were grouped based on a static 15-minute Time of Closest Approach (TCA) tolerance window. While effective, minor orbital perturbations can shift the true TCA slightly outside this window, potentially truncating a small subset of sequences.
+- **Retrospective Heuristic Assessment:** The early-prediction accuracy (74.1%) was derived via retrospective observation of a full 180-day batch, lacking an explicit chronologically isolated train/test split. It serves as a proof-of-concept heuristic rather than a deployed classification model.

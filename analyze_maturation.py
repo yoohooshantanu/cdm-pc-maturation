@@ -259,7 +259,7 @@ def analyze_sequences(sequences: list[dict]) -> dict:
             target[m1_dir] += 1
             target[m2_shape] += 1
             
-            if stable_idx != -1:
+            if stable_idx is not None and stable_idx < len(pcs) - 1:
                 target["m3_updates_to_stable"].append(stable_idx + 1)
                 
                 tca_dt = parse_dt(cdms[stable_idx]["tca"])
