@@ -36,7 +36,10 @@ LEO_MEAN_MOTION_THRESHOLD = 11.25  # rev/day
 # ---------------------------------------------------------------------------
 # Data pull window
 # ---------------------------------------------------------------------------
-DATA_WINDOW_DAYS = 30  # Pull CDMs for events with TCA in the last N days
+# To run a full academic/research-grade analysis, increase this to 180 or 365 days.
+# Note: A 180-day pull from Space-Track can take significantly longer and requires
+# thousands of API calls due to pagination. Ensure your API limits allow it.
+DATA_WINDOW_DAYS = 180  # Pull CDMs for events with TCA in the last N days
 
 # ---------------------------------------------------------------------------
 # Space-Track API rate limits

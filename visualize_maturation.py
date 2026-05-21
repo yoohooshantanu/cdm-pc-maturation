@@ -12,6 +12,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import scipy.stats as stats
 
 # Import our existing analysis engine to get the exact same numbers
 from analyze_maturation import analyze_sequences
@@ -22,8 +23,8 @@ log = logging.getLogger(__name__)
 # Paths
 BASE_DIR = Path(__file__).resolve().parent
 INPUT_PATH = BASE_DIR / "data" / "sequences_clean.json"
-# Save directly to the brain directory so artifacts can embed them easily
-OUT_DIR = Path(r"C:\Users\satyajit\.gemini\antigravity\brain\b6b7abe2-97d9-4ead-88a1-5472ad92d5fb")
+# Save directly to the project output directory
+# OUT_DIR is removed to avoid hardcoded paths
 
 def set_style():
     """Set a clean, premium, non-default styling for all plots."""
@@ -46,8 +47,7 @@ def set_style():
 def save_plot(filename):
     """Save the plot to both the artifact directory and the project output directory."""
     plt.tight_layout()
-    # Save to artifact dir for the walkthrough
-    plt.savefig(OUT_DIR / filename, dpi=300, bbox_inches='tight')
+    # Save to artifact dir is removed to avoid hardcoded paths
     
     # Save to project workspace output/charts
     project_out = BASE_DIR / "output" / "charts"
@@ -66,18 +66,20 @@ def plot_1_trajectories(sequences):
     found_spike = False
     
     for seq in samples:
-        pcs = [max(c["pc"] or 1e-12, 1e-12) for c in seq["sequence"]]
-        y = np.log10(pcs)
+        raw_pcs = [c["pc"] or 0.0 for c in seq["sequence"]]
+        y = np.log10([max(pc, 1e-12) for pc in raw_pcs])
         x = np.arange(1, len(y) + 1)
         
         sign_changes = 0
         current_dir = 0
-        for i in range(1, len(pcs)):
-            diff = pcs[i] - pcs[i-1]
-            if abs(diff) < max(pcs[i-1], 1e-12) * 0.05: continue
+        last_pc = raw_pcs[0]
+        for i in range(1, len(raw_pcs)):
+            diff = raw_pcs[i] - last_pc
+            if abs(diff) < max(last_pc, 1e-12) * 0.05 or abs(diff) < 1e-8: continue
             step_dir = 1 if diff > 0 else -1
             if current_dir != 0 and step_dir != current_dir: sign_changes += 1
             current_dir = step_dir
+            last_pc = raw_pcs[i]
             
         highlight = False
         color = '#BDBDBD'
@@ -148,7 +150,7 @@ def plot_3_stabilization(results):
     plt.xlabel("Number of Updates")
     plt.ylabel("Frequency (Count of Events)")
     
-    median = np.median(updates)
+    median = np.median(updates) if updates else 0
     plt.axvline(median, color='#E63946', linestyle='--', linewidth=2, label=f'Median: {median:.0f}')
     
     plt.text(10, plt.gca().get_ylim()[1]*0.8, f"Warning: {pct_never:.1f}% never stabilize\nprior to TCA.", 
@@ -165,15 +167,17 @@ def plot_4_prediction(results):
     
     overall = results["overall"]
     scored = overall["correct"] + overall["incorrect"]
+    m4_tot = overall.get("m4_total", overall["total"])
+    
     acc = overall["correct"] / scored * 100 if scored > 0 else 0
     inacc = overall["incorrect"] / scored * 100 if scored > 0 else 0
-    flat_rate = overall["flat"] / overall["total"] * 100
+    flat_rate = overall["flat"] / m4_tot * 100 if m4_tot > 0 else 0.0
     has_signal = 100.0 - flat_rate
     
-    labels = [f'Accurate Prediction\n(77% of signal events, n={scored})', 'Incorrectly Predicted', 'Flat Early Signal\n(No prediction made)']
+    labels = [f'Accurate Prediction\n({acc:.0f}% of signal events, n={scored})', 'Incorrectly Predicted', 'Flat Early Signal\n(No prediction made)']
     
-    pct_correct = (overall["correct"] / overall["total"]) * 100
-    pct_incorrect = (overall["incorrect"] / overall["total"]) * 100
+    pct_correct = (overall["correct"] / m4_tot) * 100 if m4_tot > 0 else 0.0
+    pct_incorrect = (overall["incorrect"] / m4_tot) * 100 if m4_tot > 0 else 0.0
     
     values = [pct_correct, pct_incorrect, flat_rate]
     colors = ['#2A9D8F', '#E63946', '#BDBDBD']
@@ -195,7 +199,7 @@ def plot_4_prediction(results):
              ha='center', va='center',
              bbox=dict(facecolor='#F1FAEE', edgecolor='#A8DADC', boxstyle='round,pad=0.5'))
              
-    plt.figtext(0.5, -0.05, "Early signals are absent in ~44% of events; however, when present, they are highly predictive (77% accuracy).", 
+    plt.figtext(0.5, -0.05, f"Early signals are absent in ~{flat_rate:.0f}% of events; however, when present, they are highly predictive ({acc:.0f}% accuracy).", 
                 ha="center", fontsize=12, style='italic', color='#457B9D', weight='bold', wrap=True)
                 
     save_plot("chart4_prediction.png")
@@ -204,16 +208,18 @@ def plot_5_archetypes(results):
     """Chart 5: Object type comparison (Grouped bars)."""
     plt.figure(figsize=(10, 6))
     
-    archs = ["PAYLOAD-DEBRIS", "DEBRIS-DEBRIS"]
-    labels = ["Payload - Debris\n(Active vs Dead)", "Debris - Debris\n(Dead vs Dead)"]
+    archs = ["CONSTELLATION-DEBRIS", "STANDARD PAYLOAD-DEBRIS", "DEBRIS-DEBRIS"]
+    labels = ["Mega-Constellation\nvs Debris", "Standard Payload\nvs Debris", "Debris\nvs Debris"]
     
     mono_rates = [
-        results["archetypes"][a]["m2_monotonic"] / results["archetypes"][a]["total"] * 100
+        (results["archetypes"].get(a, {}).get("m2_monotonic", 0) / results["archetypes"][a]["total"] * 100) 
+        if a in results["archetypes"] and results["archetypes"][a]["total"] > 0 else 0.0
         for a in archs
     ]
     
     osc_rates = [
-        results["archetypes"][a]["m2_oscillation"] / results["archetypes"][a]["total"] * 100
+        (results["archetypes"].get(a, {}).get("m2_oscillation", 0) / results["archetypes"][a]["total"] * 100) 
+        if a in results["archetypes"] and results["archetypes"][a]["total"] > 0 else 0.0
         for a in archs
     ]
     
@@ -230,9 +236,19 @@ def plot_5_archetypes(results):
     plt.ylim(0, 80)
     plt.legend(loc='upper right')
     
+    # Overlay p-value
+    const_deltas = results["archetypes"].get("CONSTELLATION-DEBRIS", {}).get("stability_deltas", [])
+    std_deltas = results["archetypes"].get("STANDARD PAYLOAD-DEBRIS", {}).get("stability_deltas", [])
+    
+    if const_deltas and std_deltas:
+        _, p_val = stats.mannwhitneyu(const_deltas, std_deltas, alternative='greater')
+        plt.text(1.0, 70, f"Constellation vs Standard:\np < {max(0.01, p_val):.2f}", 
+                 ha='center', va='center', fontsize=12, weight='bold', color='#1D3557',
+                 bbox=dict(facecolor='#F1FAEE', edgecolor='#1D3557', boxstyle='round,pad=0.5'))
+                 
     save_plot("chart5_archetypes.png")
 
-def plot_6_flowchart():
+def plot_6_flowchart(results):
     """Chart 6: Operator Decision Flow (Flowchart)."""
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.axis('off')
@@ -243,12 +259,18 @@ def plot_6_flowchart():
     dec_style = dict(boxstyle="round,pad=0.5", facecolor="#D6FFD6", edgecolor="#2A9D8F", lw=2)
     flat_style = dict(boxstyle="round,pad=0.5", facecolor="#E0E0E0", edgecolor="#808080", lw=2)
     
+    overall = results["overall"]
+    scored = overall["correct"] + overall["incorrect"]
+    acc = overall["correct"] / scored * 100 if scored > 0 else 0
+    m4_tot = overall.get("m4_total", overall["total"])
+    flat_rate = overall["flat"] / m4_tot * 100 if m4_tot > 0 else 0.0
+
     nodes = {
         'A': {'text': 'Initial CDM Received', 'pos': (0.5, 0.9), 'style': box_style},
         'B': {'text': 'Wait for 3 CDMs', 'pos': (0.5, 0.7), 'style': box_style},
         'C': {'text': 'Does a clear\ntrend exist?', 'pos': (0.5, 0.45), 'style': decision_style},
-        'D': {'text': 'Increasing Trend\n↓\nElevated Risk Signal →\nConsider Maneuver\n(77% directional reliability)', 'pos': (0.15, 0.1), 'style': inc_style},
-        'E': {'text': 'Decreasing Trend\n↓\nMonitor Closely\n(77% directional reliability)', 'pos': (0.5, 0.1), 'style': dec_style},
+        'D': {'text': f'Increasing Trend\n↓\nElevated Risk Signal →\nConsider Maneuver\n({acc:.0f}% directional reliability)', 'pos': (0.15, 0.1), 'style': inc_style},
+        'E': {'text': f'Decreasing Trend\n↓\nMonitor Closely\n({acc:.0f}% directional reliability)', 'pos': (0.5, 0.1), 'style': dec_style},
         'F': {'text': 'Flat / Oscillating\n↓\nHold Action\n(Wait for 4th Update)', 'pos': (0.85, 0.1), 'style': flat_style},
     }
     
@@ -268,12 +290,95 @@ def plot_6_flowchart():
     plt.title("Operator Decision Flow", pad=20, weight="bold", fontsize=18)
     
     # Add bottom footer insight
-    plt.text(0.5, -0.05, "Early signals are absent in ~44% of events — requiring delayed decisions.",
+    plt.text(0.5, -0.05, f"Early signals are absent in ~{flat_rate:.0f}% of events — requiring delayed decisions.",
              ha='center', va='center', fontsize=14, style='italic', color='#457B9D', weight='bold')
              
     plt.tight_layout()
     save_plot("chart6_decision_flow.png")
 
+
+def plot_7_dilution(results):
+    """Chart 7: Covariance Dilution (Scatter of Delta Pc vs Delta Miss Distance)."""
+    overall = results["overall"]
+    points = overall.get("dilution_points", [])
+    if not points:
+        return
+        
+    plt.figure(figsize=(10, 6))
+    dr = [p[0] for p in points]
+    dpc = [p[1] for p in points]
+    
+    # Filter extreme outliers for better visualization
+    valid_dr = []
+    valid_dpc = []
+    for r, p in zip(dr, dpc):
+        if abs(r) < 5.0 and abs(p) < 4.0: # Exclude jumps > 5km or 4 orders of magnitude
+            valid_dr.append(r)
+            valid_dpc.append(p)
+            
+    if not valid_dr:
+        return
+        
+    sns.regplot(x=valid_dr, y=valid_dpc, scatter_kws={'alpha':0.3, 'color':'#457B9D'}, line_kws={'color':'#E63946'})
+    
+    r, p_corr = stats.pearsonr(valid_dr, valid_dpc)
+    
+    plt.suptitle("The Dilution Region Effect", weight="bold", fontsize=16, y=1.02)
+    plt.title("How Miss Distance Changes Affect Collision Risk", pad=15)
+    plt.xlabel("Change in Miss Distance (km)")
+    plt.ylabel("Change in log10(Probability)")
+    
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)
+    plt.axvline(0, color='gray', linestyle='--', linewidth=1)
+    
+    plt.text(min(valid_dr)*0.9, max(valid_dpc)*0.9, f"Pearson r = {r:.2f}\np = {p_corr:.2e}", 
+             ha='left', va='top', fontsize=12, weight='bold', color='#1D3557',
+             bbox=dict(facecolor='#F1FAEE', edgecolor='#1D3557', boxstyle='round,pad=0.5'))
+             
+    save_plot("chart7_dilution.png")
+
+
+def plot_8_spaceweather(results):
+    """Chart 8: Solar Activity Impact on Volatility."""
+    sw = results.get("space_weather", {})
+    if not sw:
+        return
+        
+    high = sw.get("high_solar", {}).get("stability_deltas", [])
+    low = sw.get("low_solar", {}).get("stability_deltas", [])
+    
+    if not high and not low:
+        return
+        
+    mean_high = np.mean(high) if high else 0.0
+    mean_low = np.mean(low) if low else 0.0
+    
+    plt.figure(figsize=(8, 6))
+    
+    labels = ["Low Solar Activity\n(F10.7 < 120)", "High Solar Activity\n(F10.7 >= 120)"]
+    means = [mean_low, mean_high]
+    colors = ['#A8DADC', '#E63946']
+    
+    bars = plt.bar([0, 1], means, color=colors, width=0.6)
+    
+    plt.suptitle("Atmospheric Drag Drives Prediction Volatility", weight="bold", fontsize=16, y=1.02)
+    plt.title("Mean Conjunction Volatility by Space Weather Condition", pad=15)
+    plt.ylabel("Mean Volatility (Delta log10 Pc)")
+    plt.xticks([0, 1], labels)
+    
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, f"{yval:.2f}", 
+                 ha='center', va='bottom', weight='bold')
+                 
+    if high and low:
+        _, p_val = stats.mannwhitneyu(high, low, alternative='greater')
+        plt.text(0.5, max(means) * 1.15, f"Statistical Significance:\np < {max(0.01, p_val):.2f}", 
+                 ha='center', va='center', fontsize=12, weight='bold', color='#1D3557',
+                 bbox=dict(facecolor='#F1FAEE', edgecolor='#1D3557', boxstyle='round,pad=0.5'))
+                 
+    plt.ylim(0, max(means) * 1.3)
+    save_plot("chart8_spaceweather.png")
 
 def main():
     if not INPUT_PATH.exists():
@@ -304,9 +409,15 @@ def main():
     plot_5_archetypes(results)
     
     log.info("Generating Chart 6: Decision Flow…")
-    plot_6_flowchart()
+    plot_6_flowchart(results)
     
-    log.info("All visualizations saved to %s", OUT_DIR)
+    log.info("Generating Chart 7: Dilution Effect…")
+    plot_7_dilution(results)
+    
+    log.info("Generating Chart 8: Space Weather Effect…")
+    plot_8_spaceweather(results)
+    
+    log.info("All visualizations saved to output/charts")
 
 if __name__ == "__main__":
     main()

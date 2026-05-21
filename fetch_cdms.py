@@ -179,16 +179,14 @@ def upsert_cdm(conn: sqlite3.Connection, cdm: dict, fetched_at: str) -> bool:
         return False
 
     def safe_float(val):
-        try:
-            return float(val) if val else None
-        except (ValueError, TypeError):
-            return None
+        if val is None or str(val).strip() == "": return None
+        try: return float(val)
+        except (ValueError, TypeError): return None
 
     def safe_int(val):
-        try:
-            return int(val) if val else None
-        except (ValueError, TypeError):
-            return None
+        if val is None or str(val).strip() == "": return None
+        try: return int(val)
+        except (ValueError, TypeError): return None
 
     conn.execute(
         """INSERT OR IGNORE INTO cdm_raw

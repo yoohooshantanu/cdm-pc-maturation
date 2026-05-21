@@ -186,9 +186,8 @@ def group_into_events(cdms: list[dict]) -> dict[str, list[dict]]:
 
             if current_tca is None or abs((tca - current_tca).total_seconds()) <= tolerance.total_seconds():
                 current_cluster.append(cdm)
-                # Update the reference TCA to the mean/first TCA of the cluster
-                if current_tca is None:
-                    current_tca = tca
+                # Update the reference TCA to the most recent TCA to allow rolling drift
+                current_tca = tca
             else:
                 # New cluster
                 if current_cluster:
@@ -398,6 +397,9 @@ def build_output(events: dict[str, list[dict]]) -> list[dict]:
         final_pc = sequence[-1]["pc"]
         early_pcs = [s["pc"] for s in sequence[:EARLY_CDM_COUNT]]
         is_critical = max_pc >= PC_CRITICAL_THRESHOLD
+
+        if not is_critical:
+            continue
 
         output.append({
             "event_id": event_id,
