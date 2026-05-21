@@ -324,7 +324,8 @@ def plot_7_dilution(results):
         
     sns.regplot(x=valid_dr, y=valid_dpc, scatter_kws={'alpha':0.3, 'color':'#457B9D'}, line_kws={'color':'#E63946'})
     
-    r, p_corr = stats.pearsonr(valid_dr, valid_dpc)
+    # Calculate statistics on the FULL dataset to match the analytical findings
+    r, p_corr = stats.pearsonr(dr, dpc)
     
     plt.suptitle("Exploratory Observation of Dilution Correlation", weight="bold", fontsize=16, y=1.02)
     plt.title("How Miss Distance Changes Affect Collision Risk (N=648 sequences)", pad=15)
