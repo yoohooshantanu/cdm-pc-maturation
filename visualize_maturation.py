@@ -205,36 +205,31 @@ def plot_4_prediction(results):
     save_plot("chart4_prediction.png")
 
 def plot_5_archetypes(results):
-    """Chart 5: Object type comparison (Grouped bars)."""
+    """Chart 5: Object type comparison (Volatility Bar Chart)."""
     plt.figure(figsize=(10, 6))
     
     archs = ["CONSTELLATION-DEBRIS", "STANDARD PAYLOAD-DEBRIS", "DEBRIS-DEBRIS"]
     labels = ["Mega-Constellation\nvs Debris", "Standard Payload\nvs Debris", "Debris\nvs Debris"]
     
-    mono_rates = [
-        (results["archetypes"].get(a, {}).get("m2_monotonic", 0) / results["archetypes"][a]["total"] * 100) 
-        if a in results["archetypes"] and results["archetypes"][a]["total"] > 0 else 0.0
-        for a in archs
-    ]
-    
-    osc_rates = [
-        (results["archetypes"].get(a, {}).get("m2_oscillation", 0) / results["archetypes"][a]["total"] * 100) 
-        if a in results["archetypes"] and results["archetypes"][a]["total"] > 0 else 0.0
-        for a in archs
-    ]
+    means = []
+    for a in archs:
+        deltas = results["archetypes"].get(a, {}).get("stability_deltas", [])
+        means.append(np.mean(deltas) if deltas else 0.0)
     
     x = np.arange(len(labels))
-    width = 0.35
+    colors = ['#E63946', '#2A9D8F', '#A8DADC']
     
-    plt.bar(x - width/2, mono_rates, width, label='Monotonic Trend', color='#2A9D8F')
-    plt.bar(x + width/2, osc_rates, width, label='Oscillatory Behavior', color='#E63946')
+    bars = plt.bar(x, means, width=0.6, color=colors)
     
     plt.suptitle("Active Satellites Introduce Significant Instability", weight="bold", fontsize=16, y=1.02)
     plt.title("Conjunction Volatility by Object Type (N=648 sequences)", pad=15)
-    plt.ylabel("Percentage of Events (%)")
+    plt.ylabel("Mean Volatility (Delta log10 Pc)")
     plt.xticks(x, labels)
-    plt.ylim(0, 80)
-    plt.legend(loc='upper right')
+    
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, f"{yval:.2f}", 
+                 ha='center', va='bottom', weight='bold')
     
     # Overlay p-value
     const_deltas = results["archetypes"].get("CONSTELLATION-DEBRIS", {}).get("stability_deltas", [])
@@ -242,10 +237,16 @@ def plot_5_archetypes(results):
     
     if const_deltas and std_deltas:
         _, p_val = stats.mannwhitneyu(const_deltas, std_deltas, alternative='greater')
-        plt.text(1.0, 70, f"Constellation vs Standard:\np < {max(0.01, p_val):.2f}", 
+        if p_val < 0.01:
+            p_text = "p < 0.01"
+        else:
+            p_text = f"p = {p_val:.2f}"
+            
+        plt.text(1.0, max(means) * 0.9, f"Constellation vs Standard:\n{p_text}", 
                  ha='center', va='center', fontsize=12, weight='bold', color='#1D3557',
                  bbox=dict(facecolor='#F1FAEE', edgecolor='#1D3557', boxstyle='round,pad=0.5'))
                  
+    plt.ylim(0, max(means) * 1.3)
     save_plot("chart5_archetypes.png")
 
 def plot_6_flowchart(results):
@@ -368,12 +369,17 @@ def plot_8_spaceweather(results):
     
     for bar in bars:
         yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, f"{yval:.2f}", 
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.002, f"{yval:.3f}", 
                  ha='center', va='bottom', weight='bold')
                  
     if high and low:
         _, p_val = stats.mannwhitneyu(high, low, alternative='greater')
-        plt.text(0.5, max(means) * 1.15, f"Statistical Significance:\np < {max(0.01, p_val):.2f}", 
+        if p_val < 0.01:
+            p_text = "p < 0.01"
+        else:
+            p_text = f"p = {p_val:.2f}"
+            
+        plt.text(0.5, max(means) * 1.15, f"Statistical Significance:\n{p_text}", 
                  ha='center', va='center', fontsize=12, weight='bold', color='#1D3557',
                  bbox=dict(facecolor='#F1FAEE', edgecolor='#1D3557', boxstyle='round,pad=0.5'))
                  
