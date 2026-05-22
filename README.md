@@ -51,7 +51,7 @@ Stabilization is defined as the sequence index at which all subsequent $P_c$ upd
 - **Median Updates to Stable:** 5 CDMs
 - **Median Time to Stable:** $T-25.5$ hours to TCA.
 
-While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty. Notably, the histogram exhibits a bimodal distribution (peaking at ~3 and ~5 updates), suggesting the presence of two distinct operational populations or radar tracking cadences that are worth investigating in future work.
+While the median event achieves mathematical stability at approximately $T-24$ hours, **Figure 2** demonstrates that **14.8% of events never achieve stabilization** prior to TCA, requiring operators to execute maneuvers under conditions of high statistical uncertainty. Notably, the histogram exhibits a bimodal distribution (peaking at ~3 and ~5 updates), suggesting the presence of two distinct operational populations or radar tracking cadences. We hypothesize this variance is driven by SSN update cadence differences between specific LEO shells (e.g., highly tracked 550 km regimes vs sparser high-LEO regimes), presenting a compelling vector for future investigation.
 
 ![Figure 2](./output/charts/chart3_stabilization.png)
 *Figure 2: Stabilization updates vs. pathological non-stabilizing events.*
@@ -162,7 +162,7 @@ python visualize_maturation.py
 
 ## 9. Future Work
 
-**Orbit Altitude Confounding:** The object-type volatility findings (Section 4) indicate that mega-constellations introduce significant prediction noise. However, there is likely a confounding relationship with altitude, as most mega-constellations reside in specific LEO regimes ($500$-$600$ km) where atmospheric drag uncertainties are more pronounced than in higher orbits. Follow-up studies will incorporate a rigorous altitude breakdown to isolate the effects of atmospheric drag from active autonomous station-keeping maneuvers.
+**Orbit Altitude Confounding:** The object-type volatility findings (Section 4) indicate that mega-constellations introduce significant prediction noise. However, there is likely a confounding relationship with altitude, as most mega-constellations reside in specific LEO regimes ($500$-$600$ km) where atmospheric drag uncertainties are more pronounced than in higher orbits. To definitively separate atmospheric drag from active station-keeping noise, follow-up studies will implement a cross-referencing pipeline to pair Space-Track's `SAT_1_ID` with historical Two-Line Element (TLE) datasets. By extracting the true apogee and perigee at the specific TCA epoch, we can apply an explicit altitude control variable (e.g., <600 km vs >800 km) to the Mann-Whitney U test, directly answering whether the volatility is driven by the atmosphere or the operator.
 
 ---
 
